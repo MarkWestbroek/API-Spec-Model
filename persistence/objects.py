@@ -1,4 +1,5 @@
 # pylint: disable=unused-argument, C0303, C0114,C0115,C0116, C0301, W0612, W0718, R0913, R0914, R1702, W0511, W0603, W1514
+# mw: added notes to create_object()
 
 import uuid
 from persistence.entities import Object, Enum
@@ -77,8 +78,9 @@ def get_object_by_name(f_db:str, package_id:int, name:str)->Object:
             return o
         else:
             return None
-        
-def create_object(f_db:str, package_id:int, o_type:str, o_stereotype:str, o_name:str)->int:
+
+#mw: added notes parameter to the end
+def create_object(f_db:str, package_id:int, o_type:str, o_stereotype:str, o_name:str, o_notes:str)->int:
     """
     Create an object in the t_object table
     :param o: Object to create
@@ -86,8 +88,8 @@ def create_object(f_db:str, package_id:int, o_type:str, o_stereotype:str, o_name
     :return: int
     """
     conn = ut.create_connection(f_db)
-    sql = ''' INSERT INTO t_object(Package_ID, ea_guid, Object_Type, Stereotype, Name, Author, Status, Abstract, Scope, Complexity, Effort, ParentID)
-              VALUES(?,?,?,?,?,?,?,?,?,?,?,?) '''
+    sql = ''' INSERT INTO t_object(Package_ID, ea_guid, Object_Type, Stereotype, Name, Note, Author, Status, Abstract, Scope, Complexity, Effort, ParentID)
+              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) '''
     
     # Primary key is auto-incremented
     
@@ -96,7 +98,7 @@ def create_object(f_db:str, package_id:int, o_type:str, o_stereotype:str, o_name
     with conn:
         cur = conn.cursor()
         ea_guid = "{" + str(uuid.uuid1()) +"}"
-        obj =(package_id, ea_guid, o_type, o_stereotype, o_name, "DrM", "Proposed", 0, "Public",1,0,0)
+        obj =(package_id, ea_guid, o_type, o_stereotype, o_name, o_notes, "DrM", "Proposed", 0, "Public",1,0,0)
         cur.execute(sql, obj)
         conn.commit()
     return cur.lastrowid

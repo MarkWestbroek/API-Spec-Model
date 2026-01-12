@@ -1,8 +1,9 @@
 # pylint: disable=unused-argument, C0303, C0114,C0115,C0116, C0301, E1121, W0612, W0718, R0913, R0914, R1702, W0511, W0603, W1514
+# mw: added notes to create_object call
 
 import traceback
 import yaml
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import persistence.packages as paks
 import persistence.objects as objs
 import persistence.operations as opers
@@ -91,7 +92,7 @@ def create_path(f_db: str, package_id: int, path_k: str, path_v: dict) -> int:
             path_name = split_path[-1]
         path_name.capitalize()
 
-        path_id = objs.create_object(f_db, package_id, "Interface", None, path_name)
+        path_id = objs.create_object(f_db, package_id, "Interface", None, path_name, None)
         path_v["id"] = path_id
     
 

@@ -3,7 +3,7 @@
 import sys
 import traceback
 import configparser
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import model_generator
 import validation
 

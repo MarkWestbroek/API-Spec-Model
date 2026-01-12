@@ -1,4 +1,5 @@
 # pylint: disable=unused-argument, C0303, C0114,C0115,C0116, C0301, E1121, W0612, W0718, R0913, R0914, R1702, W0511, W0603, W1514
+# mw: added notes to create_object call
 
 import traceback
 import yaml
@@ -70,11 +71,16 @@ def generate_types(f_yaml: str, f_db:str,  type_guid: str) -> int:
                 required = ob["required"]
             else:
                 required = []
-
+			
+            if "description" in ob.keys():
+                desc = ob["description"]
+            else:
+                desc = ""
+				
             if "allOf" in ob.keys():           
                 # implement "allOf" as UML generalization, the source object being the child
                 # create object
-                o_id = objs.create_object(f_db, types_package_id, "Class", None, k)
+                o_id = objs.create_object(f_db, types_package_id, "Class", None, k, desc)
                 ob["id"] = o_id
 
                 # create generalization connectors and attributes
@@ -100,7 +106,7 @@ def generate_types(f_yaml: str, f_db:str,  type_guid: str) -> int:
 
             elif ("type" in ob.keys() and 'enum' in ob.keys()):
                 # create enumeration
-                o_id = objs.create_object(f_db, types_package_id, "Enumeration", None, k)
+                o_id = objs.create_object(f_db, types_package_id, "Enumeration", None, k, desc)
                 ob["id"] = o_id
 
                 #create attributes
@@ -113,7 +119,7 @@ def generate_types(f_yaml: str, f_db:str,  type_guid: str) -> int:
             elif "type" in ob.keys():
                 if  ob["type"] == "object":
                     # create object
-                    o_id = objs.create_object(f_db, types_package_id, "Class", None, k)
+                    o_id = objs.create_object(f_db, types_package_id, "Class", None, k, desc)
                     ob["id"] = o_id
                     
                     #create attributes
@@ -124,14 +130,14 @@ def generate_types(f_yaml: str, f_db:str,  type_guid: str) -> int:
                     # this is an object of a basic type
                     
                     # create entities
-                    o_id = objs.create_object(f_db, types_package_id, "Class", None, k)
+                    o_id = objs.create_object(f_db, types_package_id, "Class", None, k, desc)
                     ob["id"] = o_id
                     # create one attribute of that type
                     if k in required:
                         is_req=1
                     else:
                         is_req=0   
-                    atrs.create_attribute(f_db, o_id, k.lower(), ob["type"], None, 0, is_req) 
+                    atrs.create_attribute(f_db, o_id, k.lower(), ob["type"], None, None, 0, is_req) #added empty notes
 
             # create tags for required and discrimitator
             if "discriminator" in ob.keys():
@@ -160,7 +166,7 @@ def generate_types(f_yaml: str, f_db:str,  type_guid: str) -> int:
                 # create attribute
                 if c.dest_role is None or c.dest_role == "":
                     c.dest_role = c.end_name.lower()
-                atrs.create_attribute(f_db, c.start_obj_id, c.dest_role, c.end_name, None, 1,0)
+                atrs.create_attribute(f_db, c.start_obj_id, c.dest_role, c.end_name, None, None, 1,0) #added empty notes
         except Exception as e:
             # do not raise, continue execution
             e.add_note(f"Exception raised when creating connector {str(c)}")
@@ -174,6 +180,7 @@ def create_attributes(f_db:str, o_id:int, source_name:str, dict_atts:dict):
     att_id = 0
     att_type = ""
     is_req = 0
+    att_notes = ""
 
     for a_k, a_v in dict_atts.items():
         try:
@@ -191,7 +198,15 @@ def create_attributes(f_db:str, o_id:int, source_name:str, dict_atts:dict):
                 else:
                     att_type = a_v["type"]                                   
                
-                att_id = atrs.create_attribute(f_db, o_id, a_k, att_type, att_pos, 0, is_req)
+                if "description" in a_v.keys():
+                    # if there is a description, put it in the notes
+                    att_notes = a_v["description"]
+                #else:
+                #    att_notes = "(leeg)"
+                				
+                print (att_notes)
+				
+                att_id = atrs.create_attribute(f_db, o_id, a_k, att_type, att_notes, att_pos, 0, is_req) #added notes
                 att_pos =att_pos+1
 
                 # create attribute tags 
@@ -202,7 +217,7 @@ def create_attributes(f_db:str, o_id:int, source_name:str, dict_atts:dict):
             elif("type" in a_v.keys() and a_v["type"] == "array"):
                 # is it an array of objects? 
                 if "type" in a_v["items"] and a_v["items"]["type"] != "object":
-                    atrs.create_attribute(f_db, o_id, a_k, a_v["items"]["type"], att_pos, 1, is_req)
+                    atrs.create_attribute(f_db, o_id, a_k, a_v["items"]["type"], None, att_pos, 1, is_req) #added empty notes, maybe they are there
                     att_pos =att_pos+1
                 elif "oneOf" in a_v["items"]:
                     # TODO implement oneOf for attributes
